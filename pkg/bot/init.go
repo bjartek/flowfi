@@ -17,6 +17,7 @@ type FlowFi struct {
 	Config        Config
 	BaseUrl       string
 	Subscriptions *Subscriptions
+	Store         SubscriptionStore
 }
 
 // TODO: error handling
@@ -57,8 +58,17 @@ func NewBot() *FlowFi {
 
 	updateConfig.Timeout = config.Telegram.Timeout
 
+	// or use db store here, whatever
+	store := NewFileSubscriptionStore("subscriptions.json")
+
+	// Load existing subscriptions
+	subData, err := store.LoadSubscriptions()
+	if err != nil {
+		logger.Error("Failed loading store", zap.Error(err))
+	}
+
 	subscriptions := &Subscriptions{
-		pairs: make(map[string]*SubscriptionData),
+		pairs: subData,
 	}
 	return &FlowFi{
 		Logger:        logger,
@@ -67,6 +77,7 @@ func NewBot() *FlowFi {
 		UpdateConfig:  updateConfig,
 		BaseUrl:       "https://api.geckoterminal.com/api/v2/networks/flow-evm/pools",
 		Subscriptions: subscriptions,
+		Store:         store,
 	}
 }
 

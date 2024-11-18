@@ -3,15 +3,14 @@ package bot
 import (
 	"context"
 	"fmt"
-	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"go.uber.org/zap"
 )
 
 func (flowFi *FlowFi) Listen(ctx context.Context) error {
 	updates := flowFi.Tgbot.GetUpdatesChan(flowFi.UpdateConfig)
 	subscriptions := flowFi.Subscriptions
-	bot := flowFi.Tgbot
 
 	for {
 		select {
@@ -21,30 +20,36 @@ func (flowFi *FlowFi) Listen(ctx context.Context) error {
 				command := update.Message.Command()
 				args := update.Message.CommandArguments()
 
+				l := flowFi.Logger.With(zap.String("cmd", command), zap.Int64("chatID", chatID))
 				switch command {
 				case "subscribe":
 					if args != "" {
 						subscriptions.AddSubscription(chatID, args)
+
+						l.Info("Subscribed")
 						msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Subscribed to %s", args))
-						bot.Send(msg)
+						flowFi.Send(l, msg)
 					} else {
 						msg := tgbotapi.NewMessage(chatID, "Please specify a pair to subscribe to.")
-						bot.Send(msg)
+						flowFi.Send(l, msg)
 					}
 				case "unsubscribe":
 					if args != "" {
+
+						l.Info("Unsubscribed")
 						subscriptions.RemoveSubscription(chatID, args)
 						msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Unsubscribed from %s", args))
-						bot.Send(msg)
+
+						flowFi.Send(l, msg)
 					} else {
 						msg := tgbotapi.NewMessage(chatID, "Please specify a pair to unsubscribe from.")
-						bot.Send(msg)
+						flowFi.Send(l, msg)
 					}
 				case "status":
 					var subscribedPairs []string
 					subscriptions.mu.RLock()
 					for pair, data := range subscriptions.pairs {
-						for _, id := range data.chatIDs {
+						for _, id := range data.ChatIDs {
 							if id == chatID {
 								subscribedPairs = append(subscribedPairs, pair)
 								break
@@ -55,25 +60,24 @@ func (flowFi *FlowFi) Listen(ctx context.Context) error {
 
 					if len(subscribedPairs) > 0 {
 						msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("You are subscribed to the following pairs: %v", subscribedPairs))
-						bot.Send(msg)
+						flowFi.Send(l, msg)
 					} else {
-						msg := tgbotapi.NewMessage(chatID, "You are not subscribed to any pairs.")
-						bot.Send(msg)
+						msg := tgbotapi.NewMessage(chatID, "You are not subscribed to any pairs")
+						flowFi.Send(l, msg)
 					}
 				case "help":
 					helpText := "⚙️   /status to see what pairs are monitored\n" +
 						"⚙️   /subscribe to subscribe to a new pair\n" +
 						"⚙️   /unsubscribe to unsubscribe from a new pair"
 					msg := tgbotapi.NewMessage(chatID, helpText)
-					bot.Send(msg)
+					flowFi.Send(l, msg)
 				default:
 					msg := tgbotapi.NewMessage(chatID, "Unknown command.")
-					bot.Send(msg)
+					flowFi.Send(l, msg)
 				}
 			}
 
 		case <-ctx.Done():
-			log.Println("Stopping command listener...")
 			return ctx.Err()
 		}
 	}

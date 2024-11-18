@@ -10,26 +10,41 @@ import (
 
 	"github.com/samber/lo"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func (flowFi *FlowFi) GetTrades(ctx context.Context, pool string, lastRead uint64) ([]Attributes, uint64) {
 	url := fmt.Sprintf("%s/%s/trades", flowFi.BaseUrl, pool)
-	l := flowFi.Logger.With(zap.String("pool", pool), zap.String("url", url))
+	l := flowFi.Logger.With(zap.String("pool", pool), zap.String("url", url), zap.Any("lastRead", lastRead))
 
 	l.Info("getting trades")
-	trades, err := HttpGet[Trades](ctx, url, l)
+	// TODO; configure this
+	httpLogger := l.WithOptions(zap.IncreaseLevel(zapcore.InfoLevel))
+
+	trades, err := HttpGet[Trades](ctx, url, httpLogger)
 	if err != nil {
 		flowFi.Logger.Warn("Failed getting trades", zap.Error(err))
 	}
 
 	attr := []Attributes{}
 	lastProgressed := uint64(0)
+	if len(trades.Data) > 0 {
+		lastProgressed = trades.Data[0].Attributes.BlockNumber
+	}
+	l = l.With(zap.Any("lastProgressed", lastProgressed))
+
 	for _, d := range trades.Data {
+		// we are not interested in sells
+		if d.Type == "sell" {
+			l.Debug("skipping sell")
+			continue
+		}
 		// if we have read this before we return the items progressed reversed
 		if d.Attributes.BlockNumber <= lastRead {
-			return lo.Reverse(attr), d.Attributes.BlockNumber
+			l.Debug("block is before last read")
+			return lo.Reverse(attr), lastProgressed
 		}
-		lastProgressed = d.Attributes.BlockNumber
+		l.Debug("appending")
 		attr = append(attr, d.Attributes)
 	}
 	l.Info("We might have missed trades since we added them all")
@@ -61,17 +76,25 @@ type Data struct {
 	Attributes Attributes `json:"attributes"`
 }
 
-func (a Attributes) String() string {
+func (a Attributes) String(pool string) string {
+	token := "Avocado"
 	return fmt.Sprintf(`
-🚀 *Buy\!*  
-💵_%s_ 💰 *%s*  
-🕒 %s
-📈 %s$
-[tx](https://evm.flowscan.io/tx/%s) 
+%s Buy\!
+ 🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑
+
+🔀 Spent $%s \(%s Flow\)
+🔀 Got %s %s
+👤 [Buyer](https://evm.flowscan.io/address/%s) / [TX](https://evm.flowscan.io/tx/%s)
+    [Buy](https://swap.kittypunch.xyz/?tokens=%s-%s) \| [Trend](https://www.geckoterminal.com/flow-evm/pools/%s)
+
     `,
-		formatAmount(a.ToTokenAmount), formatAmount(a.PriceToInCurrencyToken),
-		EscapeMarkdownV2(a.BlockTimestamp.String()),
-		formatAmount(a.VolumeInUsd), a.TxHash)
+		token,
+		formatAmount(a.VolumeInUsd), formatAmount(a.FromTokenAmount),
+		formatAmount(a.ToTokenAmount), token,
+		a.TxFromAddress, a.TxHash,
+		a.FromTokenAddress, a.ToTokenAddress,
+		pool,
+	)
 }
 
 func formatAddress(input string) string {

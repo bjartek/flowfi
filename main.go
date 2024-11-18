@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"flowfi_tg_bot/pkg/bot"
-	"log"
 	"os/signal"
 	"syscall"
 
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -17,8 +17,6 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	flowFi.Listen(ctx)
-
 	eg, ctx := errgroup.WithContext(ctx)
 
 	// Command listener
@@ -28,14 +26,23 @@ func main() {
 
 	// Update processor
 	eg.Go(func() error {
-		return processUpdates(ctx, bot, subscriptions)
+		return flowFi.SendUpdates(ctx)
 	})
 
+	l := flowFi.Logger
 	// Wait for all goroutines to complete
-	log.Println("Bot is running... Press Ctrl+C to exit.")
+	l.Info("Bot is running... Press Ctrl+C to exit.")
 	if err := eg.Wait(); err != nil {
-		log.Printf("Shutting down with error: %v", err)
+		if err != context.Canceled {
+			l.Warn("Shutting down with error", zap.Error(err))
+		}
 	} else {
-		log.Println("Bot shut down gracefully.")
+		l.Info("Bot shut down gracefully.")
+	}
+	// Save subscriptions on shutdown
+	if err := flowFi.StoreProgress(); err != nil {
+		flowFi.Logger.Warn("Error saving subscriptions", zap.Error(err))
+	} else {
+		flowFi.Logger.Info("Subscriptions saved successfully.")
 	}
 }

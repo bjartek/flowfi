@@ -23,6 +23,7 @@ func HttpGet[T any](ctx context.Context, url string, zapLogger *zap.Logger) (T, 
 	if err != nil {
 		zapLogger.With(zap.Error(err)).Warn("could not dump request")
 	}
+
 	zapLogger.Debug(string(dump))
 
 	client := retryablehttp.NewClient()
