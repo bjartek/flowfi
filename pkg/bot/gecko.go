@@ -35,7 +35,8 @@ func (flowFi *FlowFi) GetTrades(ctx context.Context, pool string, lastRead uint6
 
 	for _, d := range trades.Data {
 		// we are not interested in sells
-		if d.Type == "sell" {
+
+		if d.Attributes.Kind == "sell" {
 			l.Debug("skipping sell")
 			continue
 		}

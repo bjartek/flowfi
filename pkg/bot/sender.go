@@ -49,7 +49,6 @@ func (flowFi *FlowFi) SendUpdates(ctx context.Context) error {
 					msg := trade.String(pair)
 					photo.Caption = msg
 					photo.ParseMode = "MarkdownV2"
-
 					for _, chatID := range data.ChatIDs {
 						//		l2 := l.With(zap.Int64("chatId", chatID))
 						photo.ChatID = chatID
