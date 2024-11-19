@@ -86,7 +86,7 @@ func (a Attributes) String(pool string) string {
 🔀 Spent $%s \(%s Flow\)
 🔀 Got %s %s
 👤 [Buyer](https://evm.flowscan.io/address/%s) / [TX](https://evm.flowscan.io/tx/%s)
-[Buy](https://swap.kittypunch.xyz/?tokens=%s-%s) \| [Gecko](https://www.geckoterminal.com/flow-evm/pools/%s) | [Dexscreener](https://dexscreener.com/flowevm/%s)
+[Buy](https://swap.kittypunch.xyz/?tokens=%s-%s) \| [Gecko](https://www.geckoterminal.com/flow-evm/pools/%s) \| [Dexscreener](https://dexscreener.com/flowevm/%s)
 
     `,
 		token,
