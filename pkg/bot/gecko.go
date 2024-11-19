@@ -81,12 +81,12 @@ func (a Attributes) String(pool string) string {
 	token := "Avocado"
 	return fmt.Sprintf(`
 %s Buy\!
- 🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑
+ 🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑🥑 🥑🥑🥑🥑🥑🥑🥑
 
 🔀 Spent $%s \(%s Flow\)
 🔀 Got %s %s
 👤 [Buyer](https://evm.flowscan.io/address/%s) / [TX](https://evm.flowscan.io/tx/%s)
-    [Buy](https://swap.kittypunch.xyz/?tokens=%s-%s) \| [Trend](https://www.geckoterminal.com/flow-evm/pools/%s)
+[Buy](https://swap.kittypunch.xyz/?tokens=%s-%s) \| [Gecko](https://www.geckoterminal.com/flow-evm/pools/%s) | [Dexscreener](https://dexscreener.com/flowevm/%s)
 
     `,
 		token,
@@ -94,7 +94,7 @@ func (a Attributes) String(pool string) string {
 		formatAmount(a.ToTokenAmount), token,
 		a.TxFromAddress, a.TxHash,
 		a.FromTokenAddress, a.ToTokenAddress,
-		pool,
+		pool, pool,
 	)
 }
 
@@ -134,7 +134,7 @@ func formatAmount(input string) string {
 		precision = 4
 	} else {
 		// For numbers >= 1, retain up to 2 decimal places
-		precision = 2
+		precision = 1
 	}
 
 	// Format the value with the determined precision
