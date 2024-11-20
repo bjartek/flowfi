@@ -6,8 +6,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-
-	"github.com/sanity-io/litter"
 )
 
 const telegramTemplate = `
@@ -50,9 +48,6 @@ func (flowFi *FlowFi) FormatTelegram(pool string, a Attributes, ta TokenAttribut
 		Attributes:      a,
 		TokenAttributes: ta,
 	}
-
-	// for debugging
-	litter.Dump(data)
 	// Render the template
 	var output strings.Builder
 	if err := tmpl.Execute(&output, data); err != nil {
