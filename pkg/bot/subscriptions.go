@@ -1,14 +1,15 @@
 package bot
 
 import (
-	"fmt"
 	"sync"
 )
 
 // SubscriptionData stores information about a pair's subscribers and its last processed blockNumber.
 type SubscriptionData struct {
-	ChatIDs     []int64
-	BlockNumber uint64
+	TokenAttributes *TokenAttributes
+	Emoticon        string
+	ChatIDs         []int64
+	BlockNumber     uint64
 }
 
 // Subscriptions struct to group subscription data by pair
@@ -17,7 +18,7 @@ type Subscriptions struct {
 	mu    sync.RWMutex
 }
 
-func (s *Subscriptions) AddSubscription(chatID int64, pair string) {
+func (s *Subscriptions) AddSubscription(chatID int64, pair string, tokenTokenAttributes *TokenAttributes, emoticon string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -26,18 +27,17 @@ func (s *Subscriptions) AddSubscription(chatID int64, pair string) {
 
 		// Modify the existing SubscriptionData directly in the map
 		data.ChatIDs = append(data.ChatIDs, chatID)
+		data.TokenAttributes = tokenTokenAttributes
+		data.Emoticon = emoticon
 		s.pairs[pair] = data // Store the modified data back into the map
 	} else {
 		// If the pair doesn't exist, create a new entry
 		s.pairs[pair] = SubscriptionData{
-			BlockNumber: 0,
-			ChatIDs:     []int64{chatID},
+			BlockNumber:     0,
+			ChatIDs:         []int64{chatID},
+			TokenAttributes: tokenTokenAttributes,
+			Emoticon:        emoticon,
 		}
-	}
-
-	for pair, data := range s.pairs {
-		fmt.Println(pair)
-		fmt.Println(data)
 	}
 }
 
@@ -74,14 +74,6 @@ func (s *Subscriptions) GetSubscriptionData(pair string) SubscriptionData {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.pairs[pair]
-}
-
-func (s *Subscriptions) UpdateBlockNumber(pair string, blockNumber uint64) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if data, ok := s.pairs[pair]; ok {
-		data.BlockNumber = blockNumber
-	}
 }
 
 func (s *Subscriptions) SetLastProgressed(pair string, blockNumber uint64) {

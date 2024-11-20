@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.uber.org/zap"
@@ -20,17 +21,25 @@ func (flowFi *FlowFi) Listen(ctx context.Context) error {
 				command := update.Message.Command()
 				args := update.Message.CommandArguments()
 
-				l := flowFi.Logger.With(zap.String("cmd", command), zap.Int64("chatID", chatID))
+				l := flowFi.Logger.With(zap.String("cmd", command), zap.Int64("chatID", chatID), zap.String("args", args))
 				switch command {
 				case "subscribe":
 					if args != "" {
-						subscriptions.AddSubscription(chatID, args)
+
+						argList := strings.Split(args, " ")
+
+						emoticon := "💰"
+						if len(argList) == 2 {
+							emoticon = argList[1]
+						}
+						ti := flowFi.GetPoolInformation(ctx, l, argList[0])
+						subscriptions.AddSubscription(chatID, args, ti, emoticon)
 
 						l.Info("Subscribed")
 						msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Subscribed to %s", args))
 						flowFi.Send(l, msg)
 					} else {
-						msg := tgbotapi.NewMessage(chatID, "Please specify a pair to subscribe to.")
+						msg := tgbotapi.NewMessage(chatID, "Please specify a pair to subscribe to")
 						flowFi.Send(l, msg)
 					}
 				case "unsubscribe":
@@ -42,7 +51,7 @@ func (flowFi *FlowFi) Listen(ctx context.Context) error {
 
 						flowFi.Send(l, msg)
 					} else {
-						msg := tgbotapi.NewMessage(chatID, "Please specify a pair to unsubscribe from.")
+						msg := tgbotapi.NewMessage(chatID, "Please specify a pair to unsubscribe from")
 						flowFi.Send(l, msg)
 					}
 				case "status":
