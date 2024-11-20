@@ -95,6 +95,9 @@ type Config struct {
 		Debug   bool   `env:"DEBUG,default=true"`
 		Timeout int    `env:"TIMEOUT,default=60"`
 	}
+
+	// repeat this amount of emoticon for each increase in binary bucket so 8/16/32/64/128 aso
+	EmoticonStep int `env:"EMOTICON_STEP,default=4"`
 }
 
 func CreateLogger(cfg Config) *zap.Logger {

@@ -22,15 +22,14 @@ func (flowFi *FlowFi) SendUpdates(ctx context.Context) error {
 			pairs := subscriptions.GetPairs()
 
 			for _, pair := range pairs {
-
-				image := "https://fcljjsnuzjacwqgiqiib.supabase.co/storage/v1/object/public/token_images/images/f7c8d943-74ff-4cd4-acee-3e5dfcad9636.jpeg"
-				// Create a new photo message with the file
-				photo := tgbotapi.NewPhoto(0, tgbotapi.FileURL(image))
-
 				l := flowFi.Logger.With(zap.String("pair", pair))
 
 				l.Debug("process pair")
 				data := subscriptions.GetSubscriptionData(pair)
+
+				image := data.TokenAttributes.ImageURL
+				// Create a new photo message with the file
+				photo := tgbotapi.NewPhoto(0, tgbotapi.FileURL(image))
 
 				trades, lastProgressed := flowFi.GetTrades(ctx, pair, data.BlockNumber)
 				l = l.With(zap.Any("lastProgressed", lastProgressed), zap.Int("trades", len(trades)))
@@ -45,8 +44,10 @@ func (flowFi *FlowFi) SendUpdates(ctx context.Context) error {
 
 				for _, trade := range trades {
 
-					// TODO: maybe send trade id along as well?
-					msg := trade.String(pair)
+					msg, err := flowFi.FormatTelegram(pair, trade, *data.TokenAttributes, data.Emoticon)
+					if err != nil {
+						l.Warn("failed formating", zap.Error(err))
+					}
 					photo.Caption = msg
 					photo.ParseMode = "MarkdownV2"
 					for _, chatID := range data.ChatIDs {
