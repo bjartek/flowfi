@@ -24,7 +24,9 @@ func (flowFi *FlowFi) Listen(ctx context.Context) error {
 				switch command {
 				case "subscribe":
 					if args != "" {
-						subscriptions.AddSubscription(chatID, args)
+
+						ti := flowFi.GetPoolInformation(ctx, l, args)
+						subscriptions.AddSubscription(chatID, args, ti)
 
 						l.Info("Subscribed")
 						msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Subscribed to %s", args))
