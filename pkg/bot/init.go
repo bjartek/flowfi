@@ -11,13 +11,14 @@ import (
 )
 
 type FlowFi struct {
-	Logger        *zap.Logger
-	Tgbot         *tgbotapi.BotAPI
-	UpdateConfig  tgbotapi.UpdateConfig
-	Config        Config
-	BaseUrl       string
-	Subscriptions *Subscriptions
-	Store         SubscriptionStore
+	Logger               *zap.Logger
+	Tgbot                *tgbotapi.BotAPI
+	UpdateConfig         tgbotapi.UpdateConfig
+	Config               Config
+	BaseUrl              string
+	Subscriptions        *Subscriptions
+	ScreenshotUrlPattern string
+	Store                SubscriptionStore
 }
 
 // TODO: error handling
@@ -71,13 +72,14 @@ func NewBot() *FlowFi {
 		pairs: subData,
 	}
 	return &FlowFi{
-		Logger:        logger,
-		Config:        config,
-		Tgbot:         tgbot,
-		UpdateConfig:  updateConfig,
-		BaseUrl:       "https://api.geckoterminal.com/api/v2/networks/flow-evm/pools",
-		Subscriptions: subscriptions,
-		Store:         store,
+		Logger:               logger,
+		Config:               config,
+		Tgbot:                tgbot,
+		UpdateConfig:         updateConfig,
+		BaseUrl:              "https://api.geckoterminal.com/api/v2/networks/flow-evm/pools",
+		ScreenshotUrlPattern: "https://www.geckoterminal.com/flow-evm/pools/%s?embed=1&info=0&swaps=0",
+		Subscriptions:        subscriptions,
+		Store:                store,
 	}
 }
 

@@ -21,15 +21,27 @@ func (flowFi *FlowFi) SendUpdates(ctx context.Context) error {
 			// Fetch all unique pairs
 			pairs := subscriptions.GetPairs()
 
+			// screenshot
 			for _, pair := range pairs {
+
 				l := flowFi.Logger.With(zap.String("pair", pair))
 
 				l.Debug("process pair")
 				data := subscriptions.GetSubscriptionData(pair)
 
-				image := data.TokenAttributes.ImageURL
+				screenshot, err := flowFi.Screenshot(ctx, pair)
+				if err != nil {
+					return err
+				}
+
+				tbytes := tgbotapi.FileBytes{
+					Name:  "trend.png",
+					Bytes: screenshot,
+				}
+
+				//				image := data.TokenAttributes.ImageURL
 				// Create a new photo message with the file
-				photo := tgbotapi.NewPhoto(0, tgbotapi.FileURL(image))
+				photo := tgbotapi.NewPhoto(0, tbytes)
 
 				trades, lastProgressed := flowFi.GetTrades(ctx, pair, data.BlockNumber)
 				l = l.With(zap.Any("lastProgressed", lastProgressed), zap.Int("trades", len(trades)))

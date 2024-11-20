@@ -33,7 +33,7 @@ func (flowFi *FlowFi) Listen(ctx context.Context) error {
 							emoticon = argList[1]
 						}
 						ti := flowFi.GetPoolInformation(ctx, l, argList[0])
-						subscriptions.AddSubscription(chatID, args, ti, emoticon)
+						subscriptions.AddSubscription(chatID, argList[0], ti, emoticon)
 
 						l.Info("Subscribed")
 						msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Subscribed to %s", args))
