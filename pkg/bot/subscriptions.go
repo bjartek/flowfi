@@ -10,6 +10,7 @@ type SubscriptionData struct {
 	Emoticon        string
 	ChatIDs         []int64
 	BlockNumber     uint64
+	FromLimit       float64
 }
 
 // Subscriptions struct to group subscription data by pair
