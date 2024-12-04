@@ -11,7 +11,7 @@ import (
 )
 
 func (flowFi *FlowFi) GetTrades(ctx context.Context, pool string, lastRead uint64) ([]Attributes, uint64) {
-	url := fmt.Sprintf("%s/%s/trades", flowFi.BaseUrl, pool)
+	url := fmt.Sprintf("%s/pools/%s/trades", flowFi.BaseUrl, pool)
 	l := flowFi.Logger.With(zap.String("pool", pool), zap.String("url", url), zap.Any("lastRead", lastRead))
 
 	l.Info("getting trades")
