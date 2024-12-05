@@ -38,6 +38,8 @@ func (flowFi *FlowFi) SendUpdates(ctx context.Context) error {
 
 				l.Debug("got trades")
 
+				token := flowFi.GetToken(ctx, data.TokenAttributes.Address)
+
 				// if we are just starting to listen to this we do not process existing trades
 				if data.BlockNumber == 0 {
 					subscriptions.SetLastProgressed(pair, lastProgressed)
@@ -52,7 +54,7 @@ func (flowFi *FlowFi) SendUpdates(ctx context.Context) error {
 						continue
 					}
 
-					msg, err := flowFi.FormatTelegram(pair, trade, *data.TokenAttributes, data.Emoticon)
+					msg, err := flowFi.FormatTelegram(pair, trade, *data.TokenAttributes, data.Emoticon, token)
 					if err != nil {
 						l.Warn("failed formating", zap.Error(err))
 					}

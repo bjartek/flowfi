@@ -6,7 +6,7 @@ import (
 
 // SubscriptionData stores information about a pair's subscribers and its last processed blockNumber.
 type SubscriptionData struct {
-	TokenAttributes *TokenAttributes
+	TokenAttributes *PoolAttributes
 	Emoticon        string
 	ChatIDs         []int64
 	BlockNumber     uint64
@@ -19,7 +19,7 @@ type Subscriptions struct {
 	mu    sync.RWMutex
 }
 
-func (s *Subscriptions) AddSubscription(chatID int64, pair string, tokenTokenAttributes *TokenAttributes, emoticon string) {
+func (s *Subscriptions) AddSubscription(chatID int64, pair string, tokenTokenAttributes *PoolAttributes, emoticon string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

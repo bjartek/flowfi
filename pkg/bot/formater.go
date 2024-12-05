@@ -10,15 +10,17 @@ import (
 
 const telegramTemplate = `
 {{ .Emoticon }} 
-{{ .TokenAttributes.Name }} Buy\!
+{{ .PoolAttributes.Name }} Buy\!
 🔀 Spent ${{ formatAmount .Attributes.VolumeInUsd }} \({{ formatAmount .Attributes.FromTokenAmount }} Flow\)
-🔀 Got {{ formatAmount .Attributes.ToTokenAmount }} {{ .TokenAttributes.Symbol }}
+🔀 Got {{ formatAmount .Attributes.ToTokenAmount }} {{ .PoolAttributes.Symbol }}
 👤 [Buyer](https://evm.flowscan.io/address/{{ .Attributes.TxFromAddress }}) / [TX](https://evm.flowscan.io/tx/{{ .Attributes.TxHash }})
+💰 FDV ${{ formatAmount .TokenAttributes.FdvUsd }} 
+
 🛒 [Buy](https://swap.kittypunch.xyz/?tokens={{ .Attributes.FromTokenAddress }}-{{ .Attributes.ToTokenAddress }}) 
 📊 [Gecko](https://www.geckoterminal.com/flow-evm/pools/{{ .Pool }}) \| [Dexscreener](https://dexscreener.com/flowevm/{{ .Pool }})
 `
 
-func (flowFi *FlowFi) FormatTelegram(pool string, a Attributes, ta TokenAttributes, emoticon string) (string, error) {
+func (flowFi *FlowFi) FormatTelegram(pool string, a Attributes, ta PoolAttributes, emoticon string, token *TokenAttributes) (string, error) {
 	// Register functions for the template
 	funcMap := template.FuncMap{
 		"formatAmount":  FormatAmount,
@@ -38,15 +40,17 @@ func (flowFi *FlowFi) FormatTelegram(pool string, a Attributes, ta TokenAttribut
 
 	// Use the existing structs directly
 	data := struct {
+		TokenAttributes TokenAttributes
 		Pool            string
 		Emoticon        string
 		Attributes      Attributes
-		TokenAttributes TokenAttributes
+		PoolAttributes  PoolAttributes
 	}{
 		Emoticon:        repeatByCustomFactor(emoticon, value, flowFi.Config.EmoticonStep),
 		Pool:            pool,
 		Attributes:      a,
-		TokenAttributes: ta,
+		PoolAttributes:  ta,
+		TokenAttributes: *token,
 	}
 	// Render the template
 	var output strings.Builder
@@ -70,9 +74,12 @@ func FormatAmount(input string) string {
 	// Dynamically determine precision based on magnitude
 	var result string
 	switch {
-	case absValue >= 1000:
-		// For numbers 1000 or greater, format without any decimals
-		result = strconv.FormatFloat(value, 'f', 0, 64)
+	case absValue >= 1_000_000:
+		// For millions, use "m" and format with 1 decimal place
+		result = fmt.Sprintf("%.3fm", value/1_000_000)
+	case absValue >= 1_000:
+		// For thousands, use "k" and format with 1 decimal place
+		result = fmt.Sprintf("%.3fk", value/1_000)
 	case absValue < 0.01:
 		// For very small numbers, retain up to 6 decimal places
 		result = strconv.FormatFloat(value, 'f', 6, 64)

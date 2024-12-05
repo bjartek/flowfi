@@ -9,9 +9,9 @@ import (
 )
 
 type Pool struct {
-	Data []TokenData `json:"data,omitempty"`
+	Data []PoolData `json:"data,omitempty"`
 }
-type TokenAttributes struct {
+type PoolAttributes struct {
 	CoingeckoCoinID any     `json:"coingecko_coin_id,omitempty"`
 	DiscordURL      any     `json:"discord_url,omitempty"`
 	TwitterHandle   any     `json:"twitter_handle,omitempty"`
@@ -25,15 +25,15 @@ type TokenAttributes struct {
 	Decimals        int     `json:"decimals,omitempty"`
 	GtScore         float64 `json:"gt_score,omitempty"`
 }
-type TokenData struct {
-	ID         string          `json:"id,omitempty"`
-	Type       string          `json:"type,omitempty"`
-	Attributes TokenAttributes `json:"attributes,omitempty"`
+type PoolData struct {
+	ID         string         `json:"id,omitempty"`
+	Type       string         `json:"type,omitempty"`
+	Attributes PoolAttributes `json:"attributes,omitempty"`
 }
 
-func (flowFi *FlowFi) GetPoolInformation(ctx context.Context, logger *zap.Logger, pool string) *TokenAttributes {
+func (flowFi *FlowFi) GetPoolInformation(ctx context.Context, logger *zap.Logger, pool string) *PoolAttributes {
 	httpLogger := logger.WithOptions(zap.IncreaseLevel(zapcore.InfoLevel))
-	url := fmt.Sprintf("%s/%s/info", flowFi.BaseUrl, pool)
+	url := fmt.Sprintf("%s/pools/%s/info", flowFi.BaseUrl, pool)
 	poolData, err := HttpGet[Pool](ctx, url, httpLogger)
 	if err != nil {
 		flowFi.Logger.Warn("Failed getting pool", zap.Error(err))

@@ -75,7 +75,7 @@ func NewBot() *FlowFi {
 		Config:        config,
 		Tgbot:         tgbot,
 		UpdateConfig:  updateConfig,
-		BaseUrl:       "https://api.geckoterminal.com/api/v2/networks/flow-evm/pools",
+		BaseUrl:       "https://api.geckoterminal.com/api/v2/networks/flow-evm",
 		Subscriptions: subscriptions,
 		Store:         store,
 	}
